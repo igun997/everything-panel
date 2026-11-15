@@ -1,0 +1,24 @@
+name: Store screenshots
+
+# Renders Play Store screenshots from the real screens with demo data and uploads them as an
+# artifact. Run by hand: Actions > Store screenshots > Run workflow.
+on:
+  workflow_dispatch:
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test tool/store_screenshots_test.dart
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-shots
+          path: build/store_shots
+          if-no-files-found: error
+          retention-days: 7
