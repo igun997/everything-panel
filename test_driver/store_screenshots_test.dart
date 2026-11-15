@@ -126,6 +126,11 @@ Future<void> _settle(WidgetTester tester, {int ms = 1500}) async {
 }
 
 Future<void> _tap(WidgetTester tester, Finder f) async {
+  if (f.evaluate().isEmpty) {
+    // Leave a picture of what is on screen so a failed run can be diagnosed from the artifact.
+    await _shot(tester, 'debug', 'missing-${DateTime.now().millisecondsSinceEpoch}');
+    throw TestFailure('Nothing on screen matches $f');
+  }
   await tester.ensureVisible(f.first);
   await tester.tap(f.first, warnIfMissed: false);
   await _settle(tester, ms: 1100);
