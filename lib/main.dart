@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'boot.dart';
 import 'screens/root.dart';
 import 'services/auth_service.dart';
 import 'services/push_service.dart';
@@ -46,13 +47,7 @@ class _EverythingPanelAppState extends State<EverythingPanelApp> {
     _boot();
   }
 
-  Future<void> _boot() async {
-    await widget.push.init();
-    await widget.auth.init(firebaseReady: widget.push.firebaseReady);
-    await widget.app.load();
-    // After the local servers are loaded, so a restored vault merges into them.
-    widget.sync.attach();
-  }
+  Future<void> _boot() => bootApp(push: widget.push, auth: widget.auth, app: widget.app, sync: widget.sync);
 
   @override
   Widget build(BuildContext context) {
