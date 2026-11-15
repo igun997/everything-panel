@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "rflutter": {
+      "args": [
+        "mcp"
+      ],
+      "command": "rflutter"
+    }
+  }
+}
