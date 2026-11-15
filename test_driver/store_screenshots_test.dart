@@ -40,10 +40,10 @@ class DemoBackend implements PanelBackend {
   @override
   Future<List<ServiceInfo>> services() async => variant == 0
       ? [
-          _s('shop', 'storefront', ServiceKind.app, cpu: 3.4, mem: 18.2, c: 2),
-          _s('shop', 'checkout-api', ServiceKind.app, cpu: 1.1, mem: 22.7, c: 1),
-          _s('shop', 'order-worker', ServiceKind.app, cpu: 0.6, mem: 9.4, c: 1),
-          _s('shop', 'blog', ServiceKind.wordpress, cpu: 0.4, mem: 12.0, c: 1),
+          _s('apps', 'storefront', ServiceKind.app, cpu: 3.4, mem: 18.2, c: 2),
+          _s('apps', 'checkout-api', ServiceKind.app, cpu: 1.1, mem: 22.7, c: 1),
+          _s('apps', 'order-worker', ServiceKind.app, cpu: 0.6, mem: 9.4, c: 1),
+          _s('apps', 'blog', ServiceKind.wordpress, cpu: 0.4, mem: 12.0, c: 1),
           _s('data', 'orders-db', ServiceKind.postgres, cpu: 1.9, mem: 31.5, c: 1),
           _s('data', 'sessions', ServiceKind.redis, cpu: 0.3, mem: 4.1, c: 1),
           _s('internal', 'admin', ServiceKind.app),
