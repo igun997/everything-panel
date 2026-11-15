@@ -4,6 +4,12 @@ One glass control panel for every server provider. Easypanel first; the provider
 Coolify, Dokploy, Portainer and CapRover can follow. By PT Cipta Dua Saudara
 ([ciptadusa.com](https://www.ciptadusa.com)). Flutter, Android first.
 
+<p align="center"><img src="store/graphics/feature-graphic.png" alt="everything-panel" width="640"></p>
+
+See [FEATURES.md](FEATURES.md) for the full tour with screenshots, and `store/` for the Google Play
+listing text, graphics and screenshots. Screenshots are rendered from the real screens with demo data
+(`test_driver/store_screenshots_test.dart`, run by the *Store screenshots* workflow).
+
 - **Fleet, Services, System, Settings.** Several servers at once, live CPU / memory / disk, services
   grouped by project (foldable, pinned search), start / stop / restart / deploy, build and deploy
   activity logs.
