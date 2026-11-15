@@ -127,11 +127,19 @@ Future<void> _settle(WidgetTester tester, {int ms = 1500}) async {
 
 Future<void> _tap(WidgetTester tester, Finder f) async {
   if (f.evaluate().isEmpty) {
+    // Lists build lazily; scroll until the target exists.
+    try {
+      await tester.dragUntilVisible(f.first, find.byType(CustomScrollView).first, const Offset(0, -160), maxIteration: 40);
+    } catch (_) {}
+  }
+  if (f.evaluate().isEmpty) {
     // Leave a picture of what is on screen so a failed run can be diagnosed from the artifact.
     await _shot(tester, 'debug', 'missing-${DateTime.now().millisecondsSinceEpoch}');
     throw TestFailure('Nothing on screen matches $f');
   }
   await tester.ensureVisible(f.first);
+  // Let any scroll finish before aiming the tap.
+  await tester.pump(const Duration(milliseconds: 500));
   await tester.tap(f.first, warnIfMissed: false);
   await _settle(tester, ms: 1100);
 }

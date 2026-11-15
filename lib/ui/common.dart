@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../theme/brand.dart';
@@ -216,20 +218,33 @@ class PinnedBar extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // Solid enough to read over the list, with a soft edge instead of a divider.
-    // No backdrop blur here: the list rows beneath already carry the glass look.
-    return DecoratedBox(
+    // List rows scroll under this bar, so it is frosted: a blur layer sits *behind* the bar's
+    // content (a sibling, not an ancestor, so the glass fields inside it keep painting
+    // normally), tinted toward the page colour and fading out at the bottom edge.
+    final tint = DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [background.withValues(alpha: 0.8), background.withValues(alpha: 0.8), background.withValues(alpha: 0)],
+          colors: [background.withValues(alpha: 0.62), background.withValues(alpha: 0.62), background.withValues(alpha: 0)],
           stops: const [0, 0.82, 1],
         ),
       ),
-      // The sliver asks its child for "at most" the extent; without a tight height a shorter
-      // child leaves the header's paint size below its layout size.
-      child: SizedBox(height: extent, child: child),
+    );
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18, tileMode: TileMode.clamp),
+              child: tint,
+            ),
+          ),
+        ),
+        // The sliver asks its child for "at most" the extent; without a tight height a shorter
+        // child leaves the header's paint size below its layout size.
+        SizedBox(height: extent, child: child),
+      ],
     );
   }
 
