@@ -1,15 +1,23 @@
-name: Build signed APK
+name: Build signed APK and AAB
 
-# Reusable: builds the release APK with our credentials (repository secrets) and uploads it as
-# the artifact "apk". Callers publish it.
+# Reusable: builds the release APK (sideload / GitHub release) and the Android App Bundle
+# (Google Play) with our credentials from repository secrets. Uploads artifacts "apk" and "aab";
+# callers publish them.
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: Git ref (tag or branch) to build. Defaults to the triggering ref.
+        type: string
+        default: ''
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -40,12 +48,20 @@ jobs:
           } > android/key.properties
 
       - run: flutter pub get
-      # A rising build number keeps every nightly installable over the previous one.
+      # A rising build number keeps every build installable over the previous one, and Google
+      # Play requires each uploaded bundle to have a higher version code.
       - run: flutter build apk --release --build-number=${{ github.run_number }}
+      - run: flutter build appbundle --release --build-number=${{ github.run_number }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aab
+          path: build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7

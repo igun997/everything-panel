@@ -1,9 +1,16 @@
 name: Release
 
-# Push a tag like v0.1.0 to build a signed APK and publish it as a GitHub release.
+# Push a tag like v0.1.0 to build the signed APK and the Play Store bundle (AAB) and publish them as
+# a GitHub release. Run it by hand with a tag to (re)build and attach the files to an existing
+# release.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and attach files to (for example v0.1.1)
+        required: true
 
 permissions:
   contents: write
@@ -11,19 +18,31 @@ permissions:
 jobs:
   build:
     uses: ./.github/workflows/build-apk.yml
+    with:
+      ref: ${{ inputs.tag || github.ref }}
     secrets: inherit
 
   publish:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: apk
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: aab
+      - name: Publish release files
         run: |
-          cp app-release.apk "everything-panel-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" "everything-panel-${GITHUB_REF_NAME}.apk" \
-            --repo "$GITHUB_REPOSITORY" --title "everything-panel $GITHUB_REF_NAME" --generate-notes
+          cp app-release.apk "everything-panel-${TAG}.apk"
+          cp app-release.aab "everything-panel-${TAG}.aab"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "everything-panel-${TAG}.apk" "everything-panel-${TAG}.aab" \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "everything-panel-${TAG}.apk" "everything-panel-${TAG}.aab" \
+              --repo "$GITHUB_REPOSITORY" --title "everything-panel $TAG" --generate-notes
+          fi
