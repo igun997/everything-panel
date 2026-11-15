@@ -149,10 +149,20 @@ Future<void> _tab(WidgetTester tester, String label) async {
   await _tap(tester, find.descendant(of: nav, matching: find.text(label)));
 }
 
+/// Wraps the whole app so sheets and dialogs (separate overlay routes) are in the picture too.
+final _rootKey = GlobalKey();
+
+/// Google sign-in looks available in the pictures, as it is in an official build.
+class _StoreAuth extends AuthService {
+  _StoreAuth() {
+    available = true;
+  }
+}
+
 Future<void> _shot(WidgetTester tester, String set, String name) async {
   // Give the last animation frame a moment to settle before capturing.
   await _settle(tester, ms: 600);
-  final boundary = tester.renderObject<RenderRepaintBoundary>(find.byType(RepaintBoundary).first);
+  final boundary = _rootKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
   await tester.runAsync(() async {
     final image = await boundary.toImage(pixelRatio: tester.view.devicePixelRatio);
     final bytes = (await image.toByteData(format: ui.ImageByteFormat.png))!;
@@ -171,23 +181,33 @@ Future<AppState> _launch(WidgetTester tester, Size physical, double dpr) async {
   var next = 0;
   final app = AppState(pollInterval: const Duration(hours: 1), factory: (p, s) => DemoBackend(next++ % 2));
   await app.load();
-  final auth = AuthService();
+  final auth = _StoreAuth();
   final push = PushService();
   final sync = SyncController(app: app, auth: auth);
   addTearDown(app.dispose);
 
-  await tester.pumpWidget(AppScope(
-    app: app,
-    auth: auth,
-    push: push,
-    sync: sync,
-    child: MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(Brightness.dark),
-      themeMode: ThemeMode.dark,
-      home: const RootScreen(),
+  await tester.pumpWidget(RepaintBoundary(
+    key: _rootKey,
+    child: AppScope(
+      app: app,
+      auth: auth,
+      push: push,
+      sync: sync,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(Brightness.dark),
+        themeMode: ThemeMode.dark,
+        home: const RootScreen(),
+      ),
     ),
   ));
+  // Images decode off the test clock; load the art before the first frame is captured.
+  await tester.runAsync(() async {
+    final ctx = tester.element(find.byType(RootScreen));
+    for (final a in ['hero', 'empty', 'splash', 'logo']) {
+      await precacheImage(AssetImage('assets/images/$a.webp'), ctx);
+    }
+  });
   await _settle(tester, ms: 1800);
   return app;
 }
