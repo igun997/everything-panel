@@ -100,6 +100,9 @@ bool useBrandFonts = true;
 /// like it does on a device instead of in the blocky test font.
 String? fallbackFontFamily;
 
+/// Same, for the mono labels (eyebrows, ids, metrics). Falls back to [fallbackFontFamily].
+String? fallbackMonoFontFamily;
+
 /// Mono label style (Space Mono), used for eyebrows, ids and metrics.
 TextStyle monoStyle(Color color, {double size = 11, FontWeight? weight}) => useBrandFonts
     ? GoogleFonts.spaceMono(
@@ -109,7 +112,7 @@ TextStyle monoStyle(Color color, {double size = 11, FontWeight? weight}) => useB
         letterSpacing: 0.4,
       )
     : TextStyle(
-        fontFamily: fallbackFontFamily ?? 'monospace',
+        fontFamily: fallbackMonoFontFamily ?? fallbackFontFamily ?? 'monospace',
         color: color,
         fontSize: size,
         fontWeight: weight ?? FontWeight.w400,

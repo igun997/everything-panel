@@ -1,8 +1,9 @@
 // Renders Play Store screenshots from the real screens with made-up demo data, so nothing
-// from a real server can end up in them. Not part of `flutter test` (it lives in tool/, needs
-// network for the brand fonts). Run:
+// from a real server can end up in them. Not part of `flutter test` (it lives in integration_test/
+// and is run on purpose). The brand fonts are read from build/fonts (see store-screenshots.yml).
+// Run:
 //
-//   flutter test tool/store_screenshots_test.dart
+//   flutter test integration_test/store_screenshots_test.dart
 //
 // Output: build/store_shots/{phone,tablet7,tablet10}/NN-name.png
 import 'dart:io';
@@ -23,7 +24,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -137,8 +137,7 @@ Future<void> _tab(WidgetTester tester, String label) async {
 }
 
 Future<void> _shot(WidgetTester tester, String set, String name) async {
-  // Brand fonts download on first use; wait for them, then repaint.
-  await tester.runAsync(() => GoogleFonts.pendingFonts());
+  // Give the last animation frame a moment to settle before capturing.
   await _settle(tester, ms: 600);
   final boundary = tester.renderObject<RenderRepaintBoundary>(find.byType(RepaintBoundary).first);
   await tester.runAsync(() async {
@@ -207,19 +206,36 @@ Future<void> _storyboard(WidgetTester tester, String set, Size physical, double 
   await _shot(tester, set, '06-system');
 }
 
+Future<void> _loadFont(String family, List<String> files) async {
+  final loader = FontLoader(family);
+  var any = false;
+  for (final path in files) {
+    final f = File(path);
+    if (f.existsSync()) {
+      loader.addFont(Future.value(ByteData.sublistView(f.readAsBytesSync())));
+      any = true;
+    }
+  }
+  if (any) await loader.load();
+}
+
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    HttpOverrides.global = null; // real network, for the brand fonts
-    useBrandFonts = true;
     final root = Platform.environment['FLUTTER_ROOT'];
     if (root != null) {
-      final f = File('$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf');
-      if (f.existsSync()) {
-        final loader = FontLoader('MaterialIcons')..addFont(Future.value(ByteData.sublistView(f.readAsBytesSync())));
-        await loader.load();
-      }
+      await _loadFont('MaterialIcons', ['$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf']);
     }
+    await _loadFont('DMSans', [
+      'build/fonts/dmsans-400.ttf',
+      'build/fonts/dmsans-500.ttf',
+      'build/fonts/dmsans-600.ttf',
+      'build/fonts/dmsans-700.ttf',
+    ]);
+    await _loadFont('SpaceMono', ['build/fonts/spacemono-400.ttf']);
+    useBrandFonts = false;
+    fallbackFontFamily = 'DMSans';
+    fallbackMonoFontFamily = 'SpaceMono';
   });
 
   testWidgets('phone 1080x1920', (tester) => _storyboard(tester, 'phone', const Size(1080, 1920), 2.625));

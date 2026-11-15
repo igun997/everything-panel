@@ -8,6 +8,7 @@ on:
 jobs:
   shots:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -15,7 +16,20 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter test tool/store_screenshots_test.dart
+
+      - name: Fetch the brand fonts (DM Sans, Space Mono)
+        run: |
+          mkdir -p build/fonts
+          UA='Mozilla/5.0 (Linux; U; Android 4.0.3; en-us; KFTT Build/IML74K) AppleWebKit/535.19 (KHTML, like Gecko) Silk/3.68 Mobile Safari/535.19'
+          fetch() {
+            url=$(curl -fsS -A "$UA" "https://fonts.googleapis.com/css?family=$1:$2" | grep -oE 'https://[^)]+' | head -1)
+            curl -fsS -o "build/fonts/$3" "$url"
+          }
+          for w in 400 500 600 700; do fetch DM+Sans $w dmsans-$w.ttf; done
+          fetch Space+Mono 400 spacemono-400.ttf
+          ls -la build/fonts
+
+      - run: flutter test integration_test/store_screenshots_test.dart
       - uses: actions/upload-artifact@v4
         with:
           name: store-shots
