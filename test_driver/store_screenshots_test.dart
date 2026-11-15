@@ -1,9 +1,9 @@
 // Renders Play Store screenshots from the real screens with made-up demo data, so nothing
-// from a real server can end up in them. Not part of `flutter test` (it lives in integration_test/
+// from a real server can end up in them. Not part of `flutter test` (it lives in test_driver/
 // and is run on purpose). The brand fonts are read from build/fonts (see store-screenshots.yml).
 // Run:
 //
-//   flutter test integration_test/store_screenshots_test.dart
+//   flutter test test_driver/store_screenshots_test.dart
 //
 // Output: build/store_shots/{phone,tablet7,tablet10}/NN-name.png
 import 'dart:io';
